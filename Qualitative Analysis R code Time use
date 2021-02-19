@@ -1,8 +1,8 @@
+#load the packagesfor use in the analysis
 library(tm)
 library(SnowballC)
 library(wordcloud)
 library(RColorBrewer)
-library(readstata13)  #for reading the stata files
 library(dplyr)
 library(haven)##foreign 
 library(htmlTable)##html tables
@@ -10,18 +10,11 @@ library(magrittr)  #manipulate
 library(loose.rock) 
 library(tidyverse)
 
-df1<- read.dta13("C:/Users/user/Desktop/TimeuseData/fdata/tus_activities.dta")
-names(df1)
-a<-head(df1)
-View(a)
 #analyzing qualitative data for time use using R. Write the data to .txt
-kh<-df1$t03
-write.table(kh, append = FALSE, quote = TRUE,sep = " ",
-            file="C:/Users/user/Desktop/qualitative/md.txt", 
-            row.names = FALSE, col.names = FALSE)
 
+#Read the qualitative file, that is t03 
 
-text <- readLines("C:/Users/user/Desktop/qualitative/md.txt")
+text <- readLines("t03.txt")
 docs <- Corpus(VectorSource(text))
 #docs
 inspect(docs)
@@ -39,12 +32,9 @@ docs <- tm_map(docs, removeNumbers)
 docs <- tm_map(docs, removeWords, stopwords("english"))
 # Remove your own stop word
 # specify your stopwords as a character vector
-docs <- tm_map(docs, removeWords, c("I", "my","taking","took","preparing",
-                                    "sleeping","slept","lunch","supper",
-                                    "breakfast","eating","working","work",
-                                    "home","watching","farm","cleaning",
-                                    "washing","relaxing","sleep","night")) 
+docs <- tm_map(docs, removeWords, c("I", "my","taking")) 
 # Remove punctuations
+
 docs <- tm_map(docs, removePunctuation)
 # Eliminate extra white spaces
 docs <- tm_map(docs, stripWhitespace)
@@ -61,29 +51,25 @@ barplot(d[1:10,]$freq, las = 2, names.arg = d[1:10,]$word,
         col ="lightblue", main ="Most commonly used words......",
         ylab = "Word frequencies", xlab="Keywords")
 
-
+##read the main file part to create the comparison
+k <- read.csv("main_data.txt", sep="")
 
 ####srt detect
-k<-data.frame(df1$supervisor_name, df1$interviewer_name,df1$a01, df1$a08, df1$t03,df1$t08, df1$t11)
-head(k)
-#k
 k %>% 
-  filter((str_detect(df1.t03, "child"))) %>% # | str_detect(df1.t03, "breakfast")| str_detect(df1.t03, "supper"))%>%
-  group_by(df1.t11)%>% summarise(n=n())  %>% select(df1.t11,n) %>% htmlTable
+  filter((str_detect(df1.t03, "child"))) %>% 
+  group_by(t11)%>% summarise(n=n())  %>% select(t11,n) %>% htmlTable
 
-###filtering employment in goverment and coded sleeping in T03
-levels(k$df1.t11) #find levels of main activity minding the spaces
+###find outliers
+
+levels(k$t11) #find levels of main activity minding the spaces
 k1<-k %>% filter(df1.t11=="311 Preparing meals/snacks")
-#k1
-#k2<-k1 %>% 
-#  filter((str_detect(df1.t03, "lunch")) | str_detect(df1.t03, "supper")| str_detect(df1.t03, "breakfast"))
-#d<-k2
 
 k2<-k1 %>% 
   filter((str_detect(df1.t03, "child")))
 d<-k2
-d %>% htmlTable
+d %>% htmlTable   #copy the tableto excel
 
+###OR copy toclipboard and paste to Excel
 
 results_clipboard <- function(d, sep="\t", dec=".", max.size=(200*1000))   # Copy a data.frame to clipboard
 {
